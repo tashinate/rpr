@@ -85,13 +85,10 @@ export const EvasionConfigPanel: React.FC<EvasionConfigPanelProps> = ({
   return (
     <TooltipProvider>
       <div className="w-full bg-gradient-to-br from-slate-900/90 via-blue-900/30 to-purple-900/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-cyan-400/40 p-6 transition-all duration-300 hover:shadow-cyan-300/20 hover:border-cyan-300/60 relative overflow-hidden">
-        {/* Cyberpunk grid background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.1)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+        {/* Simplified background for performance */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-cyan-500/5"></div>
         </div>
-
-        {/* Animated scan line */}
-        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
 
         <div className="relative z-10">
           <div className="mb-6">
