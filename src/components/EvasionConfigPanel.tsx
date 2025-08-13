@@ -84,28 +84,39 @@ export const EvasionConfigPanel: React.FC<EvasionConfigPanelProps> = ({
 
   return (
     <TooltipProvider>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Advanced Evasion Configuration
-          </CardTitle>
-          <CardDescription>
-            Configure advanced anti-detection measures and provider-specific optimizations
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="w-full bg-gradient-to-br from-slate-900/90 via-blue-900/30 to-purple-900/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-cyan-400/40 p-6 transition-all duration-300 hover:shadow-cyan-300/20 hover:border-cyan-300/60 relative overflow-hidden">
+        {/* Cyberpunk grid background */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.1)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+        </div>
+
+        {/* Animated scan line */}
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
+
+        <div className="relative z-10">
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Shield className="h-6 w-6 text-cyan-400" />
+              <h3 className="text-xl font-jetbrains font-bold text-cyan-100 uppercase tracking-wide">
+                Advanced Evasion Configuration
+              </h3>
+            </div>
+            <p className="text-sm text-cyan-200/80 font-inter">
+              Configure advanced anti-detection measures and provider-specific optimizations
+            </p>
+          </div>
+          <div className="space-y-6">
           
           {/* Target Provider Selection */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-green-600" />
-              <label className="text-sm font-medium">Target Email Provider</label>
+          <div className="space-y-4 p-4 bg-gradient-to-br from-slate-800/40 via-blue-900/20 to-purple-900/20 rounded-xl border border-cyan-400/30">
+            <div className="flex items-center gap-3">
+              <Target className="h-5 w-5 text-cyan-400" />
+              <label className="font-jetbrains font-semibold text-cyan-100 uppercase text-sm tracking-wide">Target Email Provider</label>
               <Tooltip>
                 <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-400" />
+                  <Info className="h-4 w-4 text-cyan-300/70 hover:text-cyan-300 transition-colors" />
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="bg-gradient-to-br from-slate-900/95 to-blue-900/95 border border-cyan-400/40 text-cyan-100 font-inter">
                   <p>Select the primary email provider to optimize delivery rates</p>
                 </TooltipContent>
               </Tooltip>
@@ -298,25 +309,29 @@ export const EvasionConfigPanel: React.FC<EvasionConfigPanelProps> = ({
           </div>
 
           {/* Configuration Summary */}
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-sm text-blue-800 mb-2">Configuration Summary</h4>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-blue-600">Target:</span> {providerInfo[config.targetProvider].name}
+          <div className="p-4 bg-gradient-to-br from-cyan-900/30 via-blue-900/40 to-purple-900/30 rounded-xl border border-cyan-400/30">
+            <h4 className="font-jetbrains font-bold text-sm text-cyan-100 mb-3 uppercase tracking-wide">Configuration Summary</h4>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="flex flex-col">
+                <span className="text-cyan-300 font-jetbrains uppercase">Target:</span>
+                <span className="text-cyan-100 font-inter">{providerInfo[config.targetProvider].name}</span>
               </div>
-              <div>
-                <span className="text-blue-600">Anti-Detection:</span> {config.enableAntiDetection ? 'Enabled' : 'Disabled'}
+              <div className="flex flex-col">
+                <span className="text-cyan-300 font-jetbrains uppercase">Anti-Detection:</span>
+                <span className="text-cyan-100 font-inter">{config.enableAntiDetection ? 'Enabled' : 'Disabled'}</span>
               </div>
-              <div>
-                <span className="text-blue-600">Mimicry:</span> {config.enableBehavioralMimicry ? 'Enabled' : 'Disabled'}
+              <div className="flex flex-col">
+                <span className="text-cyan-300 font-jetbrains uppercase">Mimicry:</span>
+                <span className="text-cyan-100 font-inter">{config.enableBehavioralMimicry ? 'Enabled' : 'Disabled'}</span>
               </div>
-              <div>
-                <span className="text-blue-600">URL Aging:</span> {config.useAgedUrl ? `${config.agingPeriod}h` : 'Disabled'}
+              <div className="flex flex-col">
+                <span className="text-cyan-300 font-jetbrains uppercase">URL Aging:</span>
+                <span className="text-cyan-100 font-inter">{config.useAgedUrl ? `${config.agingPeriod}h` : 'Disabled'}</span>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </TooltipProvider>
   );
 };

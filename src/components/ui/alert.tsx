@@ -4,13 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-xl border p-4 backdrop-blur-sm bg-gradient-to-br from-slate-900/90 via-blue-900/30 to-purple-900/30 border-cyan-400/40 shadow-xl [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-cyan-400 font-jetbrains",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "text-cyan-50 border-cyan-400/40",
         destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+          "border-red-400/50 text-red-100 bg-gradient-to-br from-red-900/90 via-red-800/30 to-purple-900/30 [&>svg]:text-red-400",
+        warning:
+          "border-amber-400/50 text-amber-100 bg-gradient-to-br from-amber-900/90 via-amber-800/30 to-orange-900/30 [&>svg]:text-amber-400",
+        success:
+          "border-emerald-400/50 text-emerald-100 bg-gradient-to-br from-emerald-900/90 via-emerald-800/30 to-green-900/30 [&>svg]:text-emerald-400",
       },
     },
     defaultVariants: {
@@ -38,7 +42,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+    className={cn("mb-1 font-jetbrains font-semibold leading-none tracking-tight text-cyan-100 uppercase text-sm", className)}
     {...props}
   />
 ))
@@ -50,7 +54,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed", className)}
+    className={cn("text-sm [&_p]:leading-relaxed text-cyan-200/90 font-inter", className)}
     {...props}
   />
 ))
