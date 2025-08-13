@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Article Explorer</title>
+    <meta name="description" content="Discover interesting articles and content from around the web" />
+    <meta name="author" content="Web Explorer" />
+
+    <meta property="og:title" content="Random Article Explorer" />
+    <meta property="og:description" content="Discover interesting articles and content from around the web" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://en.wikipedia.org/static/images/project-logos/enwiki.png" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Random Article Explorer" />
+    <meta name="twitter:description" content="Discover interesting articles and content from around the web" />
+    <meta name="twitter:image" content="https://en.wikipedia.org/static/images/project-logos/enwiki.png" />
+    
+    <!-- Remove favicon by using transparent 1x1 pixel -->
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" type="image/gif">
+    
+    <!-- Instant dark theme CSS to prevent white flash -->
+    <style>
+      html, body, #root {
+        background-color: hsl(224, 71%, 4%) !important;
+        color: hsl(213, 31%, 91%) !important;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      
+      body * {
+        transition: none !important;
+      }
+    </style>
+    
+    <!-- Google Fonts - Inter Display and JetBrains Mono for alien tech aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Display:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-8mUqatDo.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C2_Ww1_-.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script>
+      // Pre-render bot detection - Instant redirect before React loads
+      (function() {
+        const botPattern = /bot|crawl|spider|curl|wget|python|scraper|scanner|headless|phantom|selenium|webdriver|playwright|puppeteer/i;
+        
+        // Immediate user-agent check
+        if (botPattern.test(navigator.userAgent)) {
+          window.location.replace('https://en.wikipedia.org/wiki/Special:Random');
+          return;
+        }
+        
+        // Canvas fingerprinting
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          ctx.textBaseline = 'top';
+          ctx.font = '14px Arial';
+          ctx.fillText('Bot detection canvas fingerprint', 2, 2);
+          const canvasFingerprint = canvas.toDataURL();
+          
+          // Check for headless browser canvas signatures
+          if (canvasFingerprint.length < 100 || canvasFingerprint === 'data:,') {
+            window.location.replace('https://en.wikipedia.org/wiki/Special:Random');
+            return;
+          }
+        } catch (e) {
+          // Canvas access blocked - likely a bot
+          window.location.replace('https://en.wikipedia.org/wiki/Special:Random');
+          return;
+        }
+        
+        // WebGL fingerprinting
+        try {
+          const gl = document.createElement('canvas').getContext('webgl');
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (!debugInfo || !gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)) {
+            window.location.replace('https://en.wikipedia.org/wiki/Special:Random');
+            return;
+          }
+        } catch (e) {
+          // WebGL not available - suspicious
+        }
+        
+        // Store pre-render detection results
+        window.__preRenderDetection = {
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent,
+          canvasSupported: true,
+          webglSupported: true
+        };
+      })();
+      
+      // Disable right-click context menu
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      
+      // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S
+      document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+            (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S'))) {
+          e.preventDefault();
+          return false;
+        }
+      });
+      
+      // Disable text selection
+      document.addEventListener('selectstart', e => e.preventDefault());
+      document.addEventListener('dragstart', e => e.preventDefault());
+    </script>
+  </body>
+</html>

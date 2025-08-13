@@ -128,8 +128,7 @@ export const ValidationResultsPanel: React.FC<ValidationResultsPanelProps> = ({
           </p>
         </div>
         <div className="space-y-6">
-        
-        {/* Overall Status */}
+          {/* Overall Status */}
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
             <h3 className="font-medium">Overall Status</h3>
@@ -308,8 +307,9 @@ export const ValidationResultsPanel: React.FC<ValidationResultsPanelProps> = ({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 };
 

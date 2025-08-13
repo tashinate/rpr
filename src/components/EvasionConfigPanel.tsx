@@ -328,6 +328,7 @@ export const EvasionConfigPanel: React.FC<EvasionConfigPanelProps> = ({
             </div>
           </div>
         </div>
+        </div>
       </div>
     </TooltipProvider>
   );
