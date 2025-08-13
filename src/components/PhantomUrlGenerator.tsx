@@ -9,7 +9,7 @@ import { PhantomUrlGenerator as PhantomUrlGeneratorClass, PhantomUrlOptions } fr
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import StealthPatternSelector from './StealthPatternSelector';
-import { localPatternAnalyzer } from '@/utils/localPatternAnalyzer';
+// Removed localPatternAnalyzer - simplified interface
 import { hybridPatternManager } from '@/utils/hybridPatternManager';
 // Removed EvasionConfigPanel - simplified interface
 import ValidationResultsPanel, { ValidationResult } from './ValidationResultsPanel';
@@ -50,10 +50,7 @@ const PhantomUrlGenerator = () => {
   // Add selectedPatternId state for proper tracking with rotation
   const [selectedPatternId, setSelectedPatternId] = useState<string>('auto');
   const [patternRotationCounter, setPatternRotationCounter] = useState<number>(0);
-  // Advanced intelligence states
-  const [urlAnalysis, setUrlAnalysis] = useState<any>(null);
-  const [patternRecommendations, setPatternRecommendations] = useState<any[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // Simplified - no AI analysis needed
   // Generation metadata states
   const [generationMetadata, setGenerationMetadata] = useState<any>(null);
   const [lastGenerated, setLastGenerated] = useState<number>(0);
@@ -171,89 +168,7 @@ const PhantomUrlGenerator = () => {
     };
   };
 
-  // AI-powered URL analysis function
-  const analyzeUrlIntelligently = async (url: string) => {
-    if (!url || !url.includes('.')) return;
-
-    setIsAnalyzing(true);
-    try {
-      // Extract domain and infer context
-      const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-      const industry = inferIndustryFromDomain(domain);
-
-      // Get AI-optimized pattern recommendations
-      const context = {
-        industry,
-        targetCountry: 'US',
-        securityLevel: 'high' as const
-      };
-
-      console.log('🧠 [AI Analysis] Starting analysis for:', domain, 'Industry:', industry);
-
-      // Try to get pattern recommendations with error handling
-      let recommendations: any[] = [];
-      try {
-        const analysisResults = await localPatternAnalyzer.analyzePatterns(context);
-        recommendations = analysisResults.map(analysis => ({
-          patternName: analysis.patternName,
-          performanceScore: analysis.performanceScore,
-          recommendationReason: analysis.reasoning?.[0] || 'AI-optimized for your industry',
-          riskScore: analysis.riskScore
-        }));
-        console.log('🧠 [AI Analysis] Got recommendations:', recommendations.length);
-      } catch (patternError) {
-        console.warn('🧠 [AI Analysis] Pattern analysis failed, using fallback:', patternError);
-        // Provide fallback recommendations based on industry
-        recommendations = getFallbackRecommendations(industry);
-      }
-
-      setPatternRecommendations(recommendations.slice(0, 5));
-
-      // Generate URL analysis
-      const analysis = {
-        domain,
-        industry,
-        security_level: 'high',
-        recommended_approach: 'stealth',
-        risk_factors: analyzeRiskFactors(domain),
-        optimization_suggestions: generateOptimizationSuggestions(domain, industry)
-      };
-
-      setUrlAnalysis(analysis);
-
-      toast({
-        title: "🧠 Smart Analysis Complete",
-        description: `Found ${recommendations.length} optimized patterns for ${industry}`,
-        className: "bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 text-purple-800 shadow-lg",
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('🧠 [AI Analysis] Analysis failed:', error);
-      // Provide basic fallback analysis
-      const domain = url.replace(/^https?:\/\//, '').split('/')[0];
-      const industry = inferIndustryFromDomain(domain);
-
-      setUrlAnalysis({
-        domain,
-        industry,
-        security_level: 'medium',
-        recommended_approach: 'stealth',
-        risk_factors: analyzeRiskFactors(domain),
-        optimization_suggestions: ['Use stealth patterns for better delivery']
-      });
-
-      setPatternRecommendations(getFallbackRecommendations(industry));
-
-      toast({
-        title: "🧠 Basic Analysis Complete",
-        description: `Analysis completed with fallback data for ${industry}`,
-        className: "bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 text-amber-800 shadow-lg",
-        duration: 3000
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+  // Removed AI analysis - simplified interface
 
   // Enhanced pattern change handler with AI insights
   const handlePatternChange = async (patternId: string, patternData: any) => {
@@ -271,13 +186,9 @@ const PhantomUrlGenerator = () => {
           setSelectedPatternData(enhancedPattern);
         }
         
-        const context = urlAnalysis ? {
-          industry: urlAnalysis.industry,
-          countryCode: 'US' // Default for now
-        } : {};
+        // Simplified - no AI analysis context needed
         
-        // Use the actual UUID pattern ID (no prefix removal needed now)
-        console.log('Pattern context for analysis:', context);
+        // Pattern selection simplified
       } catch (error) {
         console.error('Pattern prediction error:', error);
       }
@@ -320,104 +231,16 @@ const PhantomUrlGenerator = () => {
     const confidence = 'high';
     
     toast({
-      title: "🎯 AI Pattern Selected",
+      title: "🎯 Pattern Selected",
       description: `${patternData.name} - ${successRate}% success rate (${confidence} confidence)`,
       className: "bg-gradient-to-r from-emerald-50 to-blue-50 border-l-4 border-emerald-500 text-emerald-800 shadow-lg",
       duration: 3000
     });
   };
 
-  // Helper functions for AI analysis
-  const inferIndustryFromDomain = (domain: string): string => {
-    const industryKeywords = {
-      'finance': ['bank', 'finance', 'trading', 'invest', 'crypto'],
-      'healthcare': ['health', 'medical', 'pharma', 'clinic', 'hospital'],
-      'technology': ['tech', 'software', 'app', 'dev', 'api', 'cloud'],
-      'ecommerce': ['shop', 'store', 'buy', 'sell', 'commerce', 'retail'],
-      'education': ['edu', 'school', 'university', 'course', 'learn'],
-      'news': ['news', 'media', 'press', 'journal', 'times'],
-      'government': ['gov', 'official', 'state', 'federal', 'public']
-    };
-    
-    for (const [industry, keywords] of Object.entries(industryKeywords)) {
-      if (keywords.some(keyword => domain.toLowerCase().includes(keyword))) {
-        return industry;
-      }
-    }
-    return 'business';
-  };
+  // Removed AI helper functions - simplified interface
 
-  const analyzeRiskFactors = (domain: string): string[] => {
-    const risks = [];
-    if (domain.includes('gov')) risks.push('government_domain');
-    if (domain.includes('bank')) risks.push('financial_service');
-    if (domain.length < 8) risks.push('short_domain');
-    if (domain.split('.').length > 3) risks.push('complex_subdomain');
-    return risks;
-  };
-
-  const generateOptimizationSuggestions = (domain: string, industry: string): string[] => {
-    const suggestions = [];
-    if (industry === 'finance') suggestions.push('Use document patterns for higher trust');
-    if (industry === 'technology') suggestions.push('Business API patterns recommended');
-    if (industry === 'healthcare') suggestions.push('Professional document mimicry optimal');
-    suggestions.push('Enable geographic optimization');
-    suggestions.push('Use AES encryption for maximum security');
-    return suggestions;
-  };
-
-  const getFallbackRecommendations = (industry: string): any[] => {
-    const baseRecommendations = [
-      {
-        patternName: 'Document Pattern',
-        performanceScore: 96,
-        recommendationReason: 'High trust document sharing format',
-        riskScore: 15
-      },
-      {
-        patternName: 'Business API Pattern',
-        performanceScore: 93,
-        recommendationReason: 'Professional API endpoint style',
-        riskScore: 20
-      },
-      {
-        patternName: 'Intelligent Pattern',
-        performanceScore: 97,
-        recommendationReason: 'AI-optimized URL structure',
-        riskScore: 12
-      }
-    ];
-
-    // Industry-specific recommendations
-    if (industry === 'finance') {
-      baseRecommendations.unshift({
-        patternName: 'Secure Document Pattern',
-        performanceScore: 98,
-        recommendationReason: 'Optimized for financial services',
-        riskScore: 10
-      });
-    } else if (industry === 'technology') {
-      baseRecommendations.unshift({
-        patternName: 'Developer API Pattern',
-        performanceScore: 95,
-        recommendationReason: 'Perfect for tech industry',
-        riskScore: 18
-      });
-    }
-
-    return baseRecommendations;
-  };
-
-  // Auto-analyze URL when it changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (inputUrl && inputUrl.includes('.') && !inputUrl.match(/^[1-5]$/)) {
-        analyzeUrlIntelligently(inputUrl);
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [inputUrl]);
+  // Removed auto-analysis - simplified interface
 
   const handleGenerateRedirect = async () => {
     if (!inputUrl.trim()) {
@@ -582,7 +405,7 @@ const PhantomUrlGenerator = () => {
         console.log('🎨 [Generation] Pattern data:', selectedPatternData);
         console.log('🛡️ [Generation] Phantom options:', phantomOptions);
         
-        // AI integration removed - using standard generation
+        // Using intelligent pattern generation
         
         try {
           // Get the mapped pattern with smart auto-select
@@ -871,10 +694,10 @@ const PhantomUrlGenerator = () => {
                   </div>
                   <div>
                     <span className={`text-base font-jetbrains font-semibold ${showAdvanced ? 'text-cyan-200' : 'text-slate-200'} transition-colors duration-300`}>
-                      {showAdvanced ? 'Advanced Pattern Selection' : 'AI Pattern Selection'}
+                      {showAdvanced ? 'Advanced Pattern Selection' : 'Smart Pattern Selection'}
                     </span>
                     <p className="text-sm text-slate-400 mt-0.5">
-                      {showAdvanced ? 'Choose specific stealth patterns' : 'Let AI select optimal patterns'}
+                      {showAdvanced ? 'Choose specific stealth patterns' : 'Automatic optimal pattern selection'}
                     </p>
                   </div>
                 </div>
@@ -943,98 +766,7 @@ const PhantomUrlGenerator = () => {
             </div>
           )}
 
-          {/* AI Analysis Display */}
-          {(isAnalyzing || urlAnalysis || patternRecommendations.length > 0) && (
-            <div className="mb-6 animate-in slide-in-from-top-4 duration-500">
-              <div className="bg-gradient-to-br from-purple-900/20 via-indigo-900/30 to-blue-900/20 backdrop-blur-md rounded-2xl border border-purple-400/30 p-5 relative overflow-hidden">
-                {/* AI Analysis Header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2.5 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg shadow-purple-500/25 border border-purple-400/20">
-                    {isAnalyzing ? (
-                      <Loader2 className="w-5 h-5 text-white animate-spin" />
-                    ) : (
-                      <Target className="w-5 h-5 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-lg">AI Analysis</h3>
-                    <p className="text-sm text-purple-200">
-                      {isAnalyzing ? 'Analyzing URL and optimizing patterns...' : 'Smart recommendations ready'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* URL Analysis Results */}
-                {urlAnalysis && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-600/30">
-                      <h4 className="text-sm font-medium text-cyan-200 mb-2 flex items-center gap-2">
-                        <Building className="w-4 h-4" />
-                        Domain Analysis
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-300">Industry:</span>
-                          <span className="text-cyan-300 capitalize">{urlAnalysis.industry}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-300">Security Level:</span>
-                          <span className="text-green-300">{urlAnalysis.security_level}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-600/30">
-                      <h4 className="text-sm font-medium text-cyan-200 mb-2 flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        Risk Factors
-                      </h4>
-                      <div className="space-y-1">
-                        {urlAnalysis.risk_factors.length > 0 ? (
-                          urlAnalysis.risk_factors.map((risk: string, index: number) => (
-                            <div key={index} className="text-xs text-amber-300 bg-amber-500/10 rounded px-2 py-1">
-                              {risk.replace('_', ' ')}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-xs text-green-300">No significant risks detected</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Pattern Recommendations */}
-                {patternRecommendations.length > 0 && (
-                  <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-600/30">
-                    <h4 className="text-sm font-medium text-cyan-200 mb-3 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      AI Recommendations ({patternRecommendations.length})
-                    </h4>
-                    <div className="grid grid-cols-1 gap-2">
-                      {patternRecommendations.slice(0, 3).map((rec: any, index: number) => (
-                        <div 
-                          key={index}
-                          className="flex items-center justify-between bg-slate-700/30 rounded-lg p-3 border border-slate-600/20"
-                        >
-                          <div>
-                            <div className="text-sm font-medium text-white">{rec.patternName}</div>
-                            <div className="text-xs text-slate-400">{rec.recommendationReason}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-emerald-300">{Math.round(rec.performanceScore)}%</div>
-                            <div className="text-xs text-slate-400">success rate</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-
-              </div>
-            </div>
-          )}
+          {/* Removed AI Analysis - simplified interface */}
 
           {/* Enhanced Generate Button */}
           <div className="relative max-w-lg mx-auto w-full">
@@ -1277,7 +1009,7 @@ const PhantomUrlGenerator = () => {
                     </div>
                     <div>
                       <div className="text-sm sm:text-base font-medium text-slate-800">Neural Firewall</div>
-                      <div className="text-[10px] sm:text-xs text-slate-600">AI-powered shields that adapt to new threats</div>
+                      <div className="text-[10px] sm:text-xs text-slate-600">Advanced shields that adapt to new threats</div>
                     </div>
                   </div>
                   
