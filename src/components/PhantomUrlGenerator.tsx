@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import StealthPatternSelector from './StealthPatternSelector';
 import { localPatternAnalyzer } from '@/utils/localPatternAnalyzer';
 import { hybridPatternManager } from '@/utils/hybridPatternManager';
-import EvasionConfigPanel, { EvasionConfig } from './EvasionConfigPanel';
+// Removed EvasionConfigPanel - simplified interface
 import ValidationResultsPanel, { ValidationResult } from './ValidationResultsPanel';
 
 const PhantomUrlGenerator = () => {
@@ -58,26 +58,14 @@ const PhantomUrlGenerator = () => {
   const [generationMetadata, setGenerationMetadata] = useState<any>(null);
   const [lastGenerated, setLastGenerated] = useState<number>(0);
 
-  // NEW: Enhanced evasion configuration state
-  const [evasionConfig, setEvasionConfig] = useState<EvasionConfig>({
-    enableAntiDetection: true,
-    targetProvider: 'generic',
-    useAgedUrl: false,
-    enableSubdomainRotation: true,
-    enableMicrosoftEvasion: false,
-    enableBehavioralMimicry: false,
-    mimicryService: 'auto',
-    agingPeriod: 168 // 7 days
-  });
+  // Simplified configuration - no complex evasion settings needed
 
-  // NEW: Validation results state
+  // Validation results state
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
 
   const { toast } = useToast();
 
-  // Initialize the PhantomUrlGenerator for URL generation
-  const phantomGenerator = new PhantomUrlGeneratorClass();
+  // PhantomUrlGenerator is initialized inline when needed
   
   // Define quick access number to URL mapping
   const numberToUrlMap: { [key: string]: string } = {
@@ -609,16 +597,7 @@ const PhantomUrlGenerator = () => {
           console.log('🔄 [Generation] Rotation counter:', patternRotationCounter);
           console.log('🎯 [Generation] Pattern data:', selectedPatternData?.name);
           
-          // Force fresh generation with enhanced variety and new features
-          const varietySeed = Date.now() + patternRotationCounter + Math.random() * 1000;
-
-          // Determine pattern based on evasion config
-          let finalPattern = mappedPattern;
-          if (evasionConfig.enableMicrosoftEvasion && evasionConfig.targetProvider === 'microsoft') {
-            finalPattern = 'microsoft';
-          } else if (evasionConfig.enableBehavioralMimicry) {
-            finalPattern = 'mimicry';
-          }
+          // Simplified generation - no complex variety seeding needed
 
           // Use new inbox-safe pattern system for advanced generation
           const phantomGenerator = new PhantomUrlGeneratorClass();
@@ -629,7 +608,7 @@ const PhantomUrlGenerator = () => {
             tier: phantomOptions.tier,
             context: {
               category: 'business', // Default to business category
-              targetProvider: evasionConfig.targetProvider || 'generic',
+              targetProvider: 'generic', // Simplified - no complex targeting
               industry: 'technology' // Default industry
             }
           });
@@ -652,8 +631,7 @@ const PhantomUrlGenerator = () => {
             timestamp: Date.now(),
             rotationCounter: patternRotationCounter + 1,
             patternName: result.pattern,
-            isAdvanced: true,
-            evasionConfig: evasionConfig
+            isAdvanced: true
           };
           
           console.log('✅ [Generation] Generated advanced URL:', resultUrl);
@@ -961,14 +939,7 @@ const PhantomUrlGenerator = () => {
                 </div>
               </div>
 
-              {/* NEW: Enhanced Evasion Configuration Panel */}
-              <div className="mt-6">
-                <EvasionConfigPanel
-                  config={evasionConfig}
-                  onChange={setEvasionConfig}
-                  disabled={isGenerating}
-                />
-              </div>
+              {/* Simplified interface - advanced evasion config removed */}
             </div>
           )}
 
@@ -1337,7 +1308,7 @@ const PhantomUrlGenerator = () => {
             <div className="mt-8">
               <ValidationResultsPanel
                 result={validationResult}
-                isLoading={isValidating}
+                isLoading={false}
                 url={generatedRedirectUrl}
               />
             </div>
