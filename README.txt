@@ -12,4 +12,5 @@
 ✅ Automatic deployment on push to main
 
 ## Quick Deploy Test
+This file was updated to test the auto-deployment system with GitHub secrets configured.
 This file was updated to test the auto-deployment system.
