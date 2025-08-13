@@ -913,11 +913,60 @@ class CentralizedUrlProcessor {
     let result = template;
 
     Object.entries(params).forEach(([key, value]) => {
-      const placeholder = `{${key}}`;
-      result = result.replace(new RegExp(`\\${placeholder}`, 'g'), value);
+      // CRITICAL FIX: Ensure value is never undefined/null
+      const safeValue = value != null ? String(value) : this.generateFallbackValue(key);
+
+      if (safeValue === 'undefined' || safeValue === 'null' || safeValue === '') {
+        console.warn(`[replacePlaceholders] 🚨 CRITICAL: Invalid value for ${key}, generating fallback`);
+        const fallbackValue = this.generateFallbackValue(key);
+        console.log(`[replacePlaceholders] Generated fallback for ${key}: ${fallbackValue}`);
+
+        const placeholder = `{${key}}`;
+        result = result.replace(new RegExp(`\\${placeholder}`, 'g'), fallbackValue);
+      } else {
+        const placeholder = `{${key}}`;
+        result = result.replace(new RegExp(`\\${placeholder}`, 'g'), safeValue);
+      }
     });
 
     return result;
+  }
+
+  private generateFallbackValue(key: string): string {
+    const keyLower = key.toLowerCase();
+
+    // Common fallback mappings
+    const fallbacks: Record<string, string> = {
+      'session': 'sess' + Math.random().toString(36).substring(2, 8),
+      'doc': 'doc' + Math.random().toString(36).substring(2, 6),
+      'id': Math.random().toString(36).substring(2, 8),
+      'ref': 'ref' + Math.random().toString(36).substring(2, 6),
+      'token': 'tok' + Math.random().toString(36).substring(2, 8),
+      'year': new Date().getFullYear().toString(),
+      'month': (new Date().getMonth() + 1).toString().padStart(2, '0'),
+      'day': new Date().getDate().toString().padStart(2, '0'),
+      'version': '1.0',
+      'type': 'standard',
+      'format': 'pdf',
+      'lang': 'en',
+      'region': 'us'
+    };
+
+    if (fallbacks[keyLower]) {
+      return fallbacks[keyLower];
+    }
+
+    // Generate based on key characteristics
+    if (keyLower.includes('id') || keyLower.includes('num')) {
+      return Math.random().toString(36).substring(2, 8);
+    }
+
+    if (keyLower.includes('date') || keyLower.includes('time')) {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    // Default fallback
+    return Math.random().toString(36).substring(2, 6);
   }
 
   private async applyAntiDetectionMeasures(url: string, targetProvider: string): Promise<string> {

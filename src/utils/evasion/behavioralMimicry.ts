@@ -390,9 +390,11 @@ export class BehavioralMimicryService {
    */
   generateServiceParameters(pattern: ServiceMimicryPattern): Record<string, string> {
     const params: Record<string, string> = {};
-    
+
     pattern.placeholders.forEach(placeholder => {
-      params[placeholder] = this.generateServiceValue(placeholder, pattern);
+      const value = this.generateServiceValue(placeholder, pattern);
+      // CRITICAL FIX: Ensure no undefined values
+      params[placeholder] = value != null ? String(value) : this.generateGenericValue(placeholder);
     });
 
     return params;

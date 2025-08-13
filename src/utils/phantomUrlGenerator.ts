@@ -133,8 +133,28 @@ export class PhantomUrlGenerator {
         encrypted = this.applyPlanBObfuscation(encrypted);
       }
 
+      // CRITICAL FIX: Generate dynamic parameters for the pattern
+      const dynamicParams = this.generateDynamicParameters(optimalPattern, context);
+      console.log(`[PhantomURL] Generated ${Object.keys(dynamicParams).length} dynamic parameters:`, dynamicParams);
+
       // Build URL with dynamic parameters
-      const phantomUrl = this.buildIntelligentUrl(finalUrl, encrypted, dynamicParams);
+      let phantomUrl = this.buildIntelligentUrl(finalUrl, encrypted, dynamicParams);
+
+      // CRITICAL FIX: Ensure URL has proper domain
+      if (!phantomUrl.startsWith('http://') && !phantomUrl.startsWith('https://')) {
+        // If the URL doesn't start with a protocol, it's a relative URL
+        // Add the base domain from the app configuration
+        const baseDomain = 'https://docs.example.com';
+
+        // Ensure proper URL construction without double slashes
+        if (phantomUrl.startsWith('/')) {
+          phantomUrl = baseDomain + phantomUrl;
+        } else {
+          phantomUrl = baseDomain + '/' + phantomUrl;
+        }
+
+        console.log(`[PhantomURL] Added base domain to relative URL: ${phantomUrl}`);
+      }
       
       // Calculate expiry time
       const expiresAt = new Date();
@@ -314,6 +334,80 @@ export class PhantomUrlGenerator {
     return obfuscated;
   }
 
+  /**
+   * Generate dynamic parameters for URL template
+   */
+  private generateDynamicParameters(pattern: any, context: PatternContext): Record<string, string> {
+    const params: Record<string, string> = {};
+    const now = new Date();
+
+    // Extract placeholders from the template
+    const template = pattern.template || '';
+    const placeholders = template.match(/\{([^}]+)\}/g) || [];
+
+    console.log(`[generateDynamicParameters] Found ${placeholders.length} placeholders in template: ${template}`);
+
+    placeholders.forEach(placeholder => {
+      const key = placeholder.slice(1, -1); // Remove { and }
+
+      // Skip 'encrypted' as it's handled separately
+      if (key === 'encrypted') {
+        return;
+      }
+
+      // Generate appropriate value based on key
+      const value = this.generateParameterValue(key, context, now);
+      params[key] = value;
+
+      console.log(`[generateDynamicParameters] Generated ${key} = ${value}`);
+    });
+
+    return params;
+  }
+
+  /**
+   * Generate appropriate value for a specific parameter
+   */
+  private generateParameterValue(key: string, context: PatternContext, now: Date): string {
+    const keyLower = key.toLowerCase();
+
+    // Time-based parameters
+    if (keyLower.includes('year')) {
+      return now.getFullYear().toString();
+    }
+    if (keyLower.includes('month')) {
+      return (now.getMonth() + 1).toString().padStart(2, '0');
+    }
+    if (keyLower.includes('day')) {
+      return now.getDate().toString().padStart(2, '0');
+    }
+    if (keyLower.includes('quarter')) {
+      return `Q${Math.ceil((now.getMonth() + 1) / 3)}`;
+    }
+
+    // Session and tracking parameters
+    if (keyLower.includes('session')) {
+      return 'sess' + Math.random().toString(36).substring(2, 8);
+    }
+    if (keyLower.includes('ref') || keyLower.includes('reference')) {
+      return 'ref' + Math.random().toString(36).substring(2, 6);
+    }
+    if (keyLower.includes('doc') || keyLower.includes('document')) {
+      return 'doc' + Math.random().toString(36).substring(2, 6);
+    }
+    if (keyLower.includes('token')) {
+      return 'tok' + Math.random().toString(36).substring(2, 8);
+    }
+
+    // ID parameters
+    if (keyLower.includes('id') || keyLower.includes('num')) {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+
+    // Use the emergency fallback system for other parameters
+    return this.generateEmergencyFallbackValue(key);
+  }
+
   private calculateSuccessRate(baseRate: number, securityLevel: number): number {
     // Improve success rate based on security level
     const securityBonus = (securityLevel - 5) * 5; // +5% per security level above 5
@@ -350,17 +444,28 @@ export class PhantomUrlGenerator {
     
     // STEP 3: CRITICAL - Apply ALL dynamic parameters with case-insensitive matching
     Object.entries(dynamicParams).forEach(([key, value]) => {
+      // CRITICAL FIX: Ensure value is never undefined/null
+      const safeValue = value != null ? String(value) : this.generateEmergencyFallbackValue(key);
+
+      if (safeValue === 'undefined' || safeValue === 'null' || safeValue === '') {
+        console.warn(`[buildIntelligentUrl] 🚨 CRITICAL: Invalid value for ${key}, generating fallback`);
+        const fallbackValue = this.generateEmergencyFallbackValue(key);
+        dynamicParams[key] = fallbackValue;
+        console.log(`[buildIntelligentUrl] Generated fallback for ${key}: ${fallbackValue}`);
+        return; // Skip this iteration and use the fallback
+      }
+
       // Create both case-sensitive and case-insensitive replacements
       const placeholderExact = `{${key}}`;
       const placeholderLower = `{${key.toLowerCase()}}`;
       const placeholderUpper = `{${key.toUpperCase()}}`;
-      
-      // Replace all variations
-      url = url.replace(new RegExp(`\\${placeholderExact}`, 'gi'), value);
-      url = url.replace(new RegExp(`\\${placeholderLower}`, 'gi'), value);
-      url = url.replace(new RegExp(`\\${placeholderUpper}`, 'gi'), value);
-      
-      console.log(`[buildIntelligentUrl] Replaced all variations of ${key} with ${value}`);
+
+      // Replace all variations with the safe value
+      url = url.replace(new RegExp(`\\${placeholderExact}`, 'gi'), safeValue);
+      url = url.replace(new RegExp(`\\${placeholderLower}`, 'gi'), safeValue);
+      url = url.replace(new RegExp(`\\${placeholderUpper}`, 'gi'), safeValue);
+
+      console.log(`[buildIntelligentUrl] Replaced all variations of ${key} with ${safeValue}`);
     });
     
     console.log(`[buildIntelligentUrl] After all parameter replacements: ${url}`);
