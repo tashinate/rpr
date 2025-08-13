@@ -140,21 +140,8 @@ export class PhantomUrlGenerator {
       // Build URL with dynamic parameters
       let phantomUrl = this.buildIntelligentUrl(finalUrl, encrypted, dynamicParams);
 
-      // CRITICAL FIX: Ensure URL has proper domain
-      if (!phantomUrl.startsWith('http://') && !phantomUrl.startsWith('https://')) {
-        // If the URL doesn't start with a protocol, it's a relative URL
-        // Add the base domain from the app configuration
-        const baseDomain = 'https://docs.example.com';
-
-        // Ensure proper URL construction without double slashes
-        if (phantomUrl.startsWith('/')) {
-          phantomUrl = baseDomain + phantomUrl;
-        } else {
-          phantomUrl = baseDomain + '/' + phantomUrl;
-        }
-
-        console.log(`[PhantomURL] Added base domain to relative URL: ${phantomUrl}`);
-      }
+      // The URL should be relative - frontend will add window.location.origin
+      console.log(`[PhantomURL] Generated relative URL: ${phantomUrl}`);
       
       // Calculate expiry time
       const expiresAt = new Date();
@@ -439,6 +426,14 @@ export class PhantomUrlGenerator {
     let url = template;
     
     // STEP 2: CRITICAL - Replace {encrypted} first with the actual encrypted URL
+    console.log(`[buildIntelligentUrl] Before encrypted replacement - URL: ${url}`);
+    console.log(`[buildIntelligentUrl] Encrypted value to replace: ${encrypted}`);
+
+    if (!encrypted || encrypted === 'undefined' || encrypted === 'null') {
+      console.error(`[buildIntelligentUrl] 🚨 CRITICAL: Invalid encrypted value: ${encrypted}`);
+      throw new Error(`Invalid encrypted data: ${encrypted}`);
+    }
+
     url = url.replace(/\{encrypted\}/g, encrypted);
     console.log(`[buildIntelligentUrl] After encrypted replacement: ${url}`);
     
